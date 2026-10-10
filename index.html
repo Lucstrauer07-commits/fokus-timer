@@ -12,6 +12,7 @@
     --muted: #7a746a;
     --line: #e4ded2;
     --accent: #d9542b;
+    --focus: #d9542b;
     --track: #ece6da;
     --done: #a39d92;
   }
@@ -26,6 +27,10 @@
       --done: #6b665e;
     }
   }
+  :root[data-color="violett"] { --focus: #7c4dce; }
+  :root[data-color="pink"]    { --focus: #d6457a; }
+  :root[data-color="petrol"]  { --focus: #1f7f8c; }
+  :root[data-mode="focus"] { --accent: var(--focus); }
   :root[data-mode="short"] { --accent: #2f9e74; }
   :root[data-mode="long"]  { --accent: #3b6fd8; }
 
@@ -38,10 +43,23 @@
     font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
     display: flex;
     justify-content: center;
-    padding: 32px 16px;
+    padding: 24px 16px 32px;
     transition: background .4s;
   }
   main { width: 100%; max-width: 420px; }
+
+  .topbar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+  .topbar h1 { font-size: 17px; margin: 0; flex: 1; }
+  .icon-btn {
+    border: 1px solid var(--line); background: var(--card); color: var(--text);
+    width: 38px; height: 38px; border-radius: 50%; font-size: 16px; cursor: pointer;
+  }
+  .badge {
+    border: 0; border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 12px;
+    font-weight: 700; letter-spacing: .5px; cursor: pointer;
+    background: var(--accent); color: #fff; text-decoration: none;
+  }
+  .badge.owned { background: var(--track); color: var(--muted); cursor: default; }
 
   .modes {
     display: flex; gap: 4px; padding: 4px;
@@ -54,7 +72,7 @@
   .modes button.active { background: var(--accent); color: #fff; }
 
   .ring-wrap { position: relative; width: 280px; max-width: 100%; aspect-ratio: 1; margin: 28px auto 20px; }
-  svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .ring-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
   .track { stroke: var(--track); }
   .progress { stroke: var(--accent); transition: stroke-dashoffset .3s linear, stroke .4s; }
   .center {
@@ -86,12 +104,12 @@
     background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px;
   }
   .tasks h2 { font-size: 15px; margin: 0 0 12px; }
-  form { display: flex; gap: 8px; }
-  input[type=text] {
+  #taskForm { display: flex; gap: 8px; }
+  input[type=text], input[type=number] {
     flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--bg); color: var(--text);
     border-radius: 10px; padding: 10px 12px; font: inherit;
   }
-  form button {
+  #taskForm button {
     border: 0; background: var(--accent); color: #fff; border-radius: 10px; padding: 0 14px;
     font: inherit; font-size: 20px; cursor: pointer;
   }
@@ -103,10 +121,68 @@
   li .del { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 18px; }
   .empty { color: var(--muted); font-size: 14px; margin: 12px 0 0; }
   .hint { text-align: center; color: var(--muted); font-size: 12px; margin-top: 16px; }
+
+  dialog {
+    width: min(400px, calc(100vw - 32px)); border: 1px solid var(--line); border-radius: 18px;
+    background: var(--card); color: var(--text); padding: 20px;
+  }
+  dialog::backdrop { background: rgba(0,0,0,.45); }
+  dialog h2 { font-size: 18px; margin: 0 0 16px; display: flex; justify-content: space-between; align-items: center; }
+  dialog h3 { font-size: 13px; color: var(--muted); font-weight: 600; margin: 18px 0 8px; text-transform: uppercase; letter-spacing: .5px; }
+  .close { border: 0; background: none; color: var(--muted); font-size: 22px; cursor: pointer; }
+  fieldset { border: 0; padding: 0; margin: 0; }
+  fieldset:disabled { opacity: .45; }
+  .durations { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .durations label { font-size: 12px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
+  .choices { display: flex; flex-wrap: wrap; gap: 6px; }
+  .choices button {
+    border: 1px solid var(--line); background: var(--bg); color: var(--text);
+    border-radius: 999px; padding: 7px 12px; font: inherit; font-size: 14px; cursor: pointer;
+  }
+  .choices button.active { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  .swatch { width: 14px; height: 14px; border-radius: 50%; display: inline-block; vertical-align: -2px; margin-right: 4px; }
+
+  .lock {
+    display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 12px;
+    background: var(--bg); border: 1px dashed var(--line); font-size: 14px; margin-bottom: 4px;
+    color: var(--text); font-family: inherit;
+  }
+  .lock span { flex: 1; }
+  .lock button, .wide {
+    border: 0; background: var(--accent); color: #fff; border-radius: 10px; padding: 9px 14px;
+    font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; text-align: center;
+  }
+  .wide { display: block; width: 100%; padding: 12px; margin-top: 10px; }
+  .wide.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+
+  .stat-row { display: flex; gap: 8px; }
+  .stat { flex: 1; background: var(--bg); border-radius: 12px; padding: 12px; }
+  .stat b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; }
+  .stat small { color: var(--muted); font-size: 12px; }
+  .chart-wrap { position: relative; }
+  .chart { display: flex; align-items: flex-end; gap: 8px; height: 150px; margin-top: 18px; }
+  .chart.blur { filter: blur(5px); pointer-events: none; }
+  .bar { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
+  .bar i { display: block; width: 100%; border-radius: 6px 6px 2px 2px; background: var(--accent); min-height: 3px; }
+  .bar.zero i { background: var(--track); }
+  .bar span { font-size: 12px; color: var(--muted); }
+  .bar.today span { color: var(--text); font-weight: 700; }
+  .chart-wrap .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+  .msg { font-size: 14px; margin: 10px 0 0; min-height: 20px; }
+  .msg.err { color: #d33; }
+  .msg.ok { color: #2f9e74; }
+  .small { color: var(--muted); font-size: 13px; line-height: 1.5; }
 </style>
 </head>
 <body>
 <main>
+  <div class="topbar">
+    <h1>Fokus-Timer</h1>
+    <button class="badge" id="proBadge">PRO</button>
+    <button class="icon-btn" id="openStats" title="Statistik" aria-label="Statistik">📊</button>
+    <button class="icon-btn" id="openSettings" title="Einstellungen" aria-label="Einstellungen">⚙️</button>
+  </div>
+
   <div class="modes" role="tablist">
     <button data-mode="focus" class="active">Fokus</button>
     <button data-mode="short">Kurze Pause</button>
@@ -148,9 +224,68 @@
   <p class="hint">Leertaste: Start/Pause · R: Zurücksetzen · S: Überspringen</p>
 </main>
 
+<dialog id="settings">
+  <h2>Einstellungen <button class="close" data-close aria-label="Schließen">×</button></h2>
+  <div class="lock" id="settingsLock">
+    <span>🔒 Diese Einstellungen gibt es mit <b>Pro</b>.</span>
+    <button data-unlock>Freischalten</button>
+  </div>
+  <fieldset id="proFields">
+    <h3>Dauer in Minuten</h3>
+    <div class="durations">
+      <label>Fokus <input type="number" id="durFocus" min="1" max="180"></label>
+      <label>Kurze Pause <input type="number" id="durShort" min="1" max="60"></label>
+      <label>Lange Pause <input type="number" id="durLong" min="1" max="90"></label>
+    </div>
+    <h3>Hintergrundgeräusch beim Fokus</h3>
+    <div class="choices" id="soundChoices">
+      <button data-sound="off">Aus</button>
+      <button data-sound="rain">🌧️ Regen</button>
+      <button data-sound="brown">🌊 Tiefes Rauschen</button>
+      <button data-sound="white">📻 Weißes Rauschen</button>
+    </div>
+    <h3>Farbe</h3>
+    <div class="choices" id="colorChoices">
+      <button data-color="orange"><span class="swatch" style="background:#d9542b"></span>Orange</button>
+      <button data-color="violett"><span class="swatch" style="background:#7c4dce"></span>Violett</button>
+      <button data-color="pink"><span class="swatch" style="background:#d6457a"></span>Pink</button>
+      <button data-color="petrol"><span class="swatch" style="background:#1f7f8c"></span>Petrol</button>
+    </div>
+  </fieldset>
+</dialog>
+
+<dialog id="stats">
+  <h2>Deine Woche <button class="close" data-close aria-label="Schließen">×</button></h2>
+  <div class="stat-row">
+    <div class="stat"><b id="statWeek">0 Std</b><small>letzte 7 Tage</small></div>
+    <div class="stat"><b id="statStreak">0</b><small>Tage am Stück</small></div>
+  </div>
+  <div class="chart-wrap">
+    <div class="chart" id="chart"></div>
+    <div class="overlay" id="chartLock"><button class="lock" data-unlock style="cursor:pointer">🔒 Statistik mit Pro freischalten</button></div>
+  </div>
+</dialog>
+
+<dialog id="unlock">
+  <h2>Fokus-Timer Pro <button class="close" data-close aria-label="Schließen">×</button></h2>
+  <p class="small">Eigene Zeiten, Wochen-Statistik, Hintergrundgeräusche und Farben. Einmal zahlen, für immer nutzen.</p>
+  <a class="wide" id="buyBtn" target="_blank" rel="noopener">Pro kaufen</a>
+  <h3>Schon gekauft?</h3>
+  <form id="keyForm" style="display:flex; gap:8px">
+    <input type="text" id="keyInput" placeholder="Lizenzschlüssel einfügen" autocomplete="off">
+    <button class="lock" style="margin:0; border:0" type="submit">OK</button>
+  </form>
+  <p class="msg" id="keyMsg"></p>
+</dialog>
+
 <script>
-const DURATIONS = { focus: 25 * 60, short: 5 * 60, long: 15 * 60 };
+// Verkauf: Diese beiden Werte nach dem Einrichten von Lemon Squeezy eintragen.
+const BUY_URL = "";   // Link zur Lemon-Squeezy-Kaufseite
+const STORE_ID = 0;   // Shop-ID aus Lemon Squeezy (Einstellungen → Stores)
+
+const DEFAULTS = { focus: 25, short: 5, long: 15, sound: "off", color: "orange" };
 const LABELS = { focus: "Fokuszeit", short: "Kurze Pause", long: "Lange Pause" };
+const DAYS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 const CIRC = 2 * Math.PI * 54;
 
 const $ = id => document.getElementById(id);
@@ -167,12 +302,26 @@ const store = {
   }
 };
 
-const todayKey = "fokus-" + new Date().toISOString().slice(0, 10);
+function dayKey(d) {
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+function daysAgo(n) { const d = new Date(); d.setDate(d.getDate() - n); return d; }
+function minutesOn(d) {
+  const key = dayKey(d);
+  return store.get("fokus-min-" + key, store.get("fokus-" + key, 0) * 25);
+}
+
+let isPro = !!store.get("fokus-pro", null);
+let settings = { ...DEFAULTS, ...store.get("fokus-settings", {}) };
+const cfg = () => isPro ? settings : DEFAULTS;
+const duration = m => cfg()[m] * 60;
+
+const todayKey = "fokus-" + dayKey(new Date());
 let completedToday = store.get(todayKey, 0);
 let tasks = store.get("fokus-tasks", []);
 
 let mode = "focus";
-let remaining = DURATIONS.focus;
+let remaining = duration("focus");
 let endTime = null;
 let ticker = null;
 
@@ -183,11 +332,12 @@ function fmt(sec) {
 
 function render() {
   $("time").textContent = fmt(remaining);
-  progress.style.strokeDashoffset = CIRC * (1 - remaining / DURATIONS[mode]);
-  $("toggle").textContent = ticker ? "Pause" : (remaining < DURATIONS[mode] ? "Weiter" : "Start");
-  $("label").textContent = ticker ? LABELS[mode] : (remaining < DURATIONS[mode] ? "Pausiert" : LABELS[mode]);
+  progress.style.strokeDashoffset = CIRC * (1 - remaining / duration(mode));
+  $("toggle").textContent = ticker ? "Pause" : (remaining < duration(mode) ? "Weiter" : "Start");
+  $("label").textContent = ticker ? LABELS[mode] : (remaining < duration(mode) ? "Pausiert" : LABELS[mode]);
   document.title = ticker ? `${fmt(remaining)} · ${LABELS[mode]}` : "Fokus-Timer";
   document.documentElement.dataset.mode = mode;
+  document.documentElement.dataset.color = cfg().color;
   document.querySelectorAll(".modes button").forEach(b =>
     b.classList.toggle("active", b.dataset.mode === mode));
 }
@@ -218,12 +368,14 @@ function saveTasks() { store.set("fokus-tasks", tasks); renderTasks(); }
 function start() {
   endTime = Date.now() + remaining * 1000;
   ticker = setInterval(tick, 250);
+  if (mode === "focus") startSound();
   render();
 }
 
 function pause() {
   clearInterval(ticker);
   ticker = null;
+  stopSound();
   render();
 }
 
@@ -236,16 +388,20 @@ function tick() {
 function setMode(next) {
   pause();
   mode = next;
-  remaining = DURATIONS[mode];
+  remaining = duration(mode);
   render();
 }
 
 function finish() {
+  const wasFocus = mode === "focus";
+  const minutes = Math.round((duration(mode) - remaining) / 60);
   pause();
   chime();
-  if (mode === "focus") {
+  if (wasFocus) {
     completedToday++;
     store.set(todayKey, completedToday);
+    const minKey = "fokus-min-" + dayKey(new Date());
+    store.set(minKey, store.get(minKey, (completedToday - 1) * 25) + minutes);
     renderToday();
     setMode(completedToday % 4 === 0 ? "long" : "short");
   } else {
@@ -253,14 +409,23 @@ function finish() {
   }
 }
 
+// ---- Töne ----
+let audio = null;
+let noise = null;
+function ctx() {
+  if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+  if (audio.state === "suspended") audio.resume();
+  return audio;
+}
+
 function chime() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const c = ctx();
     [660, 880, 990].forEach((f, i) => {
-      const o = ctx.createOscillator(), g = ctx.createGain();
+      const o = c.createOscillator(), g = c.createGain();
       o.frequency.value = f;
-      o.connect(g); g.connect(ctx.destination);
-      const t = ctx.currentTime + i * 0.18;
+      o.connect(g); g.connect(c.destination);
+      const t = c.currentTime + i * 0.18;
       g.gain.setValueAtTime(0.0001, t);
       g.gain.exponentialRampToValueAtTime(0.25, t + 0.02);
       g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
@@ -268,6 +433,140 @@ function chime() {
     });
   } catch {}
 }
+
+function startSound() {
+  const type = cfg().sound;
+  if (type === "off" || noise) return;
+  try {
+    const c = ctx();
+    const buf = c.createBuffer(1, c.sampleRate * 4, c.sampleRate);
+    const data = buf.getChannelData(0);
+    let last = 0;
+    for (let i = 0; i < data.length; i++) {
+      const white = Math.random() * 2 - 1;
+      if (type === "brown") { last = (last + 0.02 * white) / 1.02; data[i] = last * 3.5; }
+      else data[i] = white;
+    }
+    const src = c.createBufferSource();
+    src.buffer = buf; src.loop = true;
+    const gain = c.createGain();
+    let node = src;
+    if (type === "rain") {
+      const hp = c.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 500;
+      const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 5000;
+      src.connect(hp); hp.connect(lp); node = lp;
+    }
+    const level = { rain: 0.18, brown: 0.35, white: 0.05 }[type];
+    gain.gain.setValueAtTime(0.0001, c.currentTime);
+    gain.gain.exponentialRampToValueAtTime(level, c.currentTime + 1.5);
+    node.connect(gain); gain.connect(c.destination);
+    src.start();
+    noise = { src, gain };
+  } catch {}
+}
+
+function stopSound() {
+  if (!noise) return;
+  const { src, gain } = noise;
+  noise = null;
+  try {
+    const t = audio.currentTime;
+    gain.gain.cancelScheduledValues(t);
+    gain.gain.setValueAtTime(Math.max(gain.gain.value, 0.0001), t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+    src.stop(t + 0.45);
+  } catch {}
+}
+
+// ---- Pro ----
+function renderPro() {
+  $("proBadge").textContent = isPro ? "PRO ✓" : "PRO";
+  $("proBadge").classList.toggle("owned", isPro);
+  $("settingsLock").style.display = isPro ? "none" : "flex";
+  $("proFields").disabled = !isPro;
+  $("chartLock").style.display = isPro ? "none" : "flex";
+  $("chart").classList.toggle("blur", !isPro);
+  $("buyBtn").href = BUY_URL || "#";
+  $("buyBtn").textContent = BUY_URL ? "Pro kaufen" : "Kaufen bald verfügbar";
+}
+
+function renderSettings() {
+  $("durFocus").value = settings.focus;
+  $("durShort").value = settings.short;
+  $("durLong").value = settings.long;
+  document.querySelectorAll("[data-sound]").forEach(b => b.classList.toggle("active", b.dataset.sound === settings.sound));
+  document.querySelectorAll("#colorChoices [data-color]").forEach(b => b.classList.toggle("active", b.dataset.color === settings.color));
+}
+
+function saveSettings() {
+  store.set("fokus-settings", settings);
+  renderSettings();
+  if (!ticker) remaining = duration(mode);
+  if (noise) { stopSound(); if (ticker && mode === "focus") startSound(); }
+  render();
+}
+
+[["durFocus", "focus", 180], ["durShort", "short", 60], ["durLong", "long", 90]].forEach(([id, key, max]) => {
+  $(id).onchange = e => {
+    settings[key] = Math.min(max, Math.max(1, Math.round(+e.target.value) || DEFAULTS[key]));
+    saveSettings();
+  };
+});
+document.querySelectorAll("[data-sound]").forEach(b => b.onclick = () => { settings.sound = b.dataset.sound; saveSettings(); });
+document.querySelectorAll("#colorChoices [data-color]").forEach(b => b.onclick = () => { settings.color = b.dataset.color; saveSettings(); });
+
+function renderStats() {
+  let total = 0, max = 60, html = "";
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = daysAgo(i), min = minutesOn(d);
+    total += min; max = Math.max(max, min);
+    days.push({ d, min, today: i === 0 });
+  }
+  days.forEach(({ d, min, today }) => {
+    html += `<div class="bar${min ? "" : " zero"}${today ? " today" : ""}" title="${min} Minuten">
+      <i style="height:${Math.round(min / max * 100)}%"></i><span>${DAYS[d.getDay()]}</span></div>`;
+  });
+  $("chart").innerHTML = html;
+  $("statWeek").textContent = (total / 60).toLocaleString("de-DE", { maximumFractionDigits: 1 }) + " Std";
+  let streak = 0, i = minutesOn(new Date()) ? 0 : 1;
+  while (i < 366 && minutesOn(daysAgo(i))) { streak++; i++; }
+  $("statStreak").textContent = streak;
+}
+
+$("keyForm").onsubmit = async e => {
+  e.preventDefault();
+  const key = $("keyInput").value.trim();
+  const msg = $("keyMsg");
+  if (!key) return;
+  msg.className = "msg"; msg.textContent = "Wird geprüft …";
+  try {
+    const res = await fetch("https://api.lemonsqueezy.com/v1/licenses/activate", {
+      method: "POST",
+      headers: { "Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ license_key: key, instance_name: "Fokus-Timer Browser" })
+    });
+    const data = await res.json();
+    if (data.activated !== true || (STORE_ID && data.meta?.store_id !== STORE_ID)) throw new Error(data.error || "Ungültiger Schlüssel");
+    isPro = true;
+    store.set("fokus-pro", { key, instance: data.instance?.id });
+    msg.className = "msg ok"; msg.textContent = "Pro ist freigeschaltet. Danke! 🎉";
+    renderPro(); render();
+  } catch (err) {
+    msg.className = "msg err";
+    msg.textContent = "Das hat nicht geklappt. Prüfe den Schlüssel und deine Internetverbindung.";
+  }
+};
+
+// ---- Dialoge ----
+$("openSettings").onclick = () => { renderSettings(); $("settings").showModal(); };
+$("openStats").onclick = () => { renderStats(); $("stats").showModal(); };
+$("proBadge").onclick = () => { if (!isPro) $("unlock").showModal(); };
+document.querySelectorAll("[data-unlock]").forEach(b => b.onclick = () => {
+  b.closest("dialog").close(); $("unlock").showModal();
+});
+document.querySelectorAll("[data-close]").forEach(b => b.onclick = () => b.closest("dialog").close());
+document.querySelectorAll("dialog").forEach(d => d.onclick = e => { if (e.target === d) d.close(); });
 
 $("toggle").onclick = () => ticker ? pause() : start();
 $("reset").onclick = () => setMode(mode);
@@ -284,12 +583,13 @@ $("taskForm").onsubmit = e => {
 };
 
 document.addEventListener("keydown", e => {
-  if (e.target.tagName === "INPUT") return;
+  if (e.target.tagName === "INPUT" || document.querySelector("dialog[open]")) return;
   if (e.code === "Space") { e.preventDefault(); $("toggle").click(); }
   if (e.key === "r" || e.key === "R") $("reset").click();
   if (e.key === "s" || e.key === "S") $("skip").click();
 });
 
+renderPro();
 render();
 renderToday();
 renderTasks();
