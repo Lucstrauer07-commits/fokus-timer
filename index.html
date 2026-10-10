@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fokus-Timer</title>
+<style>
+  :root {
+    --bg: #f4f1ea;
+    --card: #fffdf8;
+    --text: #1f1d1a;
+    --muted: #7a746a;
+    --line: #e4ded2;
+    --accent: #d9542b;
+    --track: #ece6da;
+    --done: #a39d92;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #161513;
+      --card: #1f1e1b;
+      --text: #f0ece4;
+      --muted: #9b958a;
+      --line: #2f2d29;
+      --track: #2b2925;
+      --done: #6b665e;
+    }
+  }
+  :root[data-mode="short"] { --accent: #2f9e74; }
+  :root[data-mode="long"]  { --accent: #3b6fd8; }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 32px 16px;
+    transition: background .4s;
+  }
+  main { width: 100%; max-width: 420px; }
+
+  .modes {
+    display: flex; gap: 4px; padding: 4px;
+    background: var(--card); border: 1px solid var(--line); border-radius: 999px;
+  }
+  .modes button {
+    flex: 1; border: 0; background: transparent; color: var(--muted);
+    padding: 8px 0; border-radius: 999px; font: inherit; font-size: 14px; cursor: pointer;
+  }
+  .modes button.active { background: var(--accent); color: #fff; }
+
+  .ring-wrap { position: relative; width: 280px; max-width: 100%; aspect-ratio: 1; margin: 28px auto 20px; }
+  svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .track { stroke: var(--track); }
+  .progress { stroke: var(--accent); transition: stroke-dashoffset .3s linear, stroke .4s; }
+  .center {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .time { font-size: 64px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -1px; }
+  .label { color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+  .controls { display: flex; justify-content: center; gap: 12px; }
+  .controls button {
+    border: 1px solid var(--line); background: var(--card); color: var(--text);
+    border-radius: 999px; padding: 12px 18px; font: inherit; cursor: pointer;
+  }
+  .controls .primary {
+    background: var(--accent); border-color: var(--accent); color: #fff;
+    min-width: 120px; font-weight: 600;
+  }
+  .controls button:active { transform: scale(.97); }
+
+  .today {
+    margin: 24px 0 8px; display: flex; align-items: center; justify-content: space-between;
+    color: var(--muted); font-size: 14px;
+  }
+  .dots { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+
+  .tasks {
+    background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px;
+  }
+  .tasks h2 { font-size: 15px; margin: 0 0 12px; }
+  form { display: flex; gap: 8px; }
+  input[type=text] {
+    flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--bg); color: var(--text);
+    border-radius: 10px; padding: 10px 12px; font: inherit;
+  }
+  form button {
+    border: 0; background: var(--accent); color: #fff; border-radius: 10px; padding: 0 14px;
+    font: inherit; font-size: 20px; cursor: pointer;
+  }
+  ul { list-style: none; margin: 12px 0 0; padding: 0; }
+  li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
+  li label { flex: 1; cursor: pointer; overflow-wrap: anywhere; }
+  li.done label { text-decoration: line-through; color: var(--done); }
+  li input { accent-color: var(--accent); width: 18px; height: 18px; }
+  li .del { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 18px; }
+  .empty { color: var(--muted); font-size: 14px; margin: 12px 0 0; }
+  .hint { text-align: center; color: var(--muted); font-size: 12px; margin-top: 16px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="modes" role="tablist">
+    <button data-mode="focus" class="active">Fokus</button>
+    <button data-mode="short">Kurze Pause</button>
+    <button data-mode="long">Lange Pause</button>
+  </div>
+
+  <div class="ring-wrap">
+    <svg viewBox="0 0 120 120">
+      <circle class="track" cx="60" cy="60" r="54" fill="none" stroke-width="6"/>
+      <circle class="progress" id="progress" cx="60" cy="60" r="54" fill="none" stroke-width="6" stroke-linecap="round"/>
+    </svg>
+    <div class="center">
+      <div class="time" id="time">25:00</div>
+      <div class="label" id="label">Bereit zum Fokussieren</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="reset" title="Zurücksetzen (R)">↺</button>
+    <button id="toggle" class="primary">Start</button>
+    <button id="skip" title="Überspringen (S)">⏭</button>
+  </div>
+
+  <div class="today">
+    <span id="todayText">Heute: 0 Fokusblöcke</span>
+    <div class="dots" id="dots"></div>
+  </div>
+
+  <section class="tasks">
+    <h2>Aufgaben für diese Session</h2>
+    <form id="taskForm">
+      <input type="text" id="taskInput" placeholder="Woran arbeitest du?" autocomplete="off">
+      <button type="submit" aria-label="Hinzufügen">+</button>
+    </form>
+    <ul id="taskList"></ul>
+    <p class="empty" id="empty">Noch keine Aufgaben, füge oben eine hinzu.</p>
+  </section>
+
+  <p class="hint">Leertaste: Start/Pause · R: Zurücksetzen · S: Überspringen</p>
+</main>
+
+<script>
+const DURATIONS = { focus: 25 * 60, short: 5 * 60, long: 15 * 60 };
+const LABELS = { focus: "Fokuszeit", short: "Kurze Pause", long: "Lange Pause" };
+const CIRC = 2 * Math.PI * 54;
+
+const $ = id => document.getElementById(id);
+const progress = $("progress");
+progress.style.strokeDasharray = CIRC;
+
+const store = {
+  get(key, fallback) {
+    try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+    catch { return fallback; }
+  },
+  set(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+  }
+};
+
+const todayKey = "fokus-" + new Date().toISOString().slice(0, 10);
+let completedToday = store.get(todayKey, 0);
+let tasks = store.get("fokus-tasks", []);
+
+let mode = "focus";
+let remaining = DURATIONS.focus;
+let endTime = null;
+let ticker = null;
+
+function fmt(sec) {
+  const m = Math.floor(sec / 60), s = sec % 60;
+  return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+}
+
+function render() {
+  $("time").textContent = fmt(remaining);
+  progress.style.strokeDashoffset = CIRC * (1 - remaining / DURATIONS[mode]);
+  $("toggle").textContent = ticker ? "Pause" : (remaining < DURATIONS[mode] ? "Weiter" : "Start");
+  $("label").textContent = ticker ? LABELS[mode] : (remaining < DURATIONS[mode] ? "Pausiert" : LABELS[mode]);
+  document.title = ticker ? `${fmt(remaining)} · ${LABELS[mode]}` : "Fokus-Timer";
+  document.documentElement.dataset.mode = mode;
+  document.querySelectorAll(".modes button").forEach(b =>
+    b.classList.toggle("active", b.dataset.mode === mode));
+}
+
+function renderToday() {
+  $("todayText").textContent = `Heute: ${completedToday} Fokusblock${completedToday === 1 ? "" : "e"}`;
+  $("dots").innerHTML = '<span class="dot"></span>'.repeat(completedToday);
+}
+
+function renderTasks() {
+  const list = $("taskList");
+  list.innerHTML = "";
+  tasks.forEach((t, i) => {
+    const li = document.createElement("li");
+    if (t.done) li.className = "done";
+    const id = "t" + i;
+    li.innerHTML = `<input type="checkbox" id="${id}" ${t.done ? "checked" : ""}><label for="${id}"></label><button class="del" aria-label="Löschen">×</button>`;
+    li.querySelector("label").textContent = t.text;
+    li.querySelector("input").onchange = e => { t.done = e.target.checked; saveTasks(); };
+    li.querySelector(".del").onclick = () => { tasks.splice(i, 1); saveTasks(); };
+    list.appendChild(li);
+  });
+  $("empty").style.display = tasks.length ? "none" : "block";
+}
+
+function saveTasks() { store.set("fokus-tasks", tasks); renderTasks(); }
+
+function start() {
+  endTime = Date.now() + remaining * 1000;
+  ticker = setInterval(tick, 250);
+  render();
+}
+
+function pause() {
+  clearInterval(ticker);
+  ticker = null;
+  render();
+}
+
+function tick() {
+  remaining = Math.max(0, Math.round((endTime - Date.now()) / 1000));
+  if (remaining === 0) finish();
+  else render();
+}
+
+function setMode(next) {
+  pause();
+  mode = next;
+  remaining = DURATIONS[mode];
+  render();
+}
+
+function finish() {
+  pause();
+  chime();
+  if (mode === "focus") {
+    completedToday++;
+    store.set(todayKey, completedToday);
+    renderToday();
+    setMode(completedToday % 4 === 0 ? "long" : "short");
+  } else {
+    setMode("focus");
+  }
+}
+
+function chime() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [660, 880, 990].forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.frequency.value = f;
+      o.connect(g); g.connect(ctx.destination);
+      const t = ctx.currentTime + i * 0.18;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.25, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+      o.start(t); o.stop(t + 0.55);
+    });
+  } catch {}
+}
+
+$("toggle").onclick = () => ticker ? pause() : start();
+$("reset").onclick = () => setMode(mode);
+$("skip").onclick = () => finish();
+document.querySelectorAll(".modes button").forEach(b => b.onclick = () => setMode(b.dataset.mode));
+
+$("taskForm").onsubmit = e => {
+  e.preventDefault();
+  const text = $("taskInput").value.trim();
+  if (!text) return;
+  tasks.push({ text, done: false });
+  $("taskInput").value = "";
+  saveTasks();
+};
+
+document.addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT") return;
+  if (e.code === "Space") { e.preventDefault(); $("toggle").click(); }
+  if (e.key === "r" || e.key === "R") $("reset").click();
+  if (e.key === "s" || e.key === "S") $("skip").click();
+});
+
+render();
+renderToday();
+renderTasks();
+</script>
+</body>
+</html>
