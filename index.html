@@ -3,7 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Fokus-Timer</title>
+<title>Fokus-Timer · Kostenloser Pomodoro-Timer zum Lernen</title>
+<meta name="description" content="Kostenloser Pomodoro-Timer zum Lernen und Arbeiten: Aufgaben mit Schätzung, Tagesziel, Streak, Abzeichen, Pausen-Ideen und Atemübung. Ohne Anmeldung, funktioniert offline und als App.">
+<meta name="theme-color" content="#d9542b">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Fokus-Timer · Pomodoro-Timer zum Lernen">
+<meta property="og:description" content="Konzentrierter lernen mit Pomodoro-Timer, Tagesziel, Streak und Abzeichen. Kostenlos, ohne Anmeldung.">
+<meta property="og:image" content="icon-512.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"Fokus-Timer","applicationCategory":"ProductivityApplication","operatingSystem":"Web","inLanguage":"de","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"}}
+</script>
 <style>
   :root {
     --bg: #f4f1ea;
@@ -172,6 +184,153 @@
   .msg.err { color: #d33; }
   .msg.ok { color: #2f9e74; }
   .small { color: var(--muted); font-size: 13px; line-height: 1.5; }
+
+  .quote { text-align: center; color: var(--muted); font-size: 14px; font-style: italic; margin: -4px 0 16px; line-height: 1.4; }
+
+  .presets { display: flex; gap: 6px; overflow-x: auto; margin: 12px 0 0; padding-bottom: 2px; scrollbar-width: none; }
+  .presets button {
+    flex: none; border: 1px solid var(--line); background: var(--card); color: var(--text);
+    border-radius: 12px; padding: 6px 10px; font: inherit; font-size: 13px; cursor: pointer; text-align: left;
+  }
+  .presets button small { display: block; color: var(--muted); font-size: 11px; }
+  .presets button.active { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+
+  .break-box {
+    display: none; margin: 18px 0 0; padding: 14px; border-radius: 14px;
+    background: var(--card); border: 1px solid var(--line); text-align: center;
+  }
+  .break-box.show { display: block; }
+  .break-box p { margin: 0 0 10px; line-height: 1.45; }
+  .break-box .row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .pill {
+    border: 1px solid var(--line); background: var(--bg); color: var(--text);
+    border-radius: 999px; padding: 7px 12px; font: inherit; font-size: 13px; cursor: pointer;
+  }
+
+  .plant {
+    display: flex; align-items: center; gap: 12px; margin: 22px 0 14px; padding: 12px 14px;
+    background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+  }
+  .plant .emoji { font-size: 34px; line-height: 1; transition: transform .4s; }
+  .plant .emoji.grow { animation: grow .7s ease; }
+  @keyframes grow { 40% { transform: scale(1.35) rotate(-6deg); } }
+  .plant .info { flex: 1; font-size: 14px; }
+  .plant .info b { display: block; font-size: 15px; }
+  .plant .info span { color: var(--muted); font-size: 13px; }
+  .plant .dots { max-width: 90px; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-top: 14px;
+  }
+  .card h2 { font-size: 15px; margin: 0 0 4px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .card h2 small { color: var(--muted); font-weight: 400; font-size: 13px; }
+  .card > p.small { margin: 0 0 10px; }
+  .card form { display: flex; gap: 8px; }
+  .card form button {
+    border: 0; background: var(--accent); color: #fff; border-radius: 10px; padding: 0 14px;
+    font: inherit; font-size: 15px; cursor: pointer;
+  }
+  .meter { height: 6px; background: var(--track); border-radius: 99px; margin: 8px 0 4px; overflow: hidden; }
+  .meter i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .3s; }
+  .meter.reached i { background: #2f9e74; }
+
+  .goal-row { display: flex; align-items: center; gap: 10px; }
+  .goal-row .goal-text { flex: 1; font-size: 14px; }
+  .stepper { display: flex; align-items: center; gap: 6px; }
+  .stepper button {
+    width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line);
+    background: var(--bg); color: var(--text); font: inherit; font-size: 16px; cursor: pointer;
+  }
+  .stepper b { min-width: 22px; text-align: center; }
+  .streak { display: flex; gap: 10px; margin: 14px 0 12px; }
+  .streak div { flex: 1; background: var(--bg); border-radius: 12px; padding: 10px; text-align: center; }
+  .streak b { display: block; font-size: 22px; }
+  .streak span { color: var(--muted); font-size: 12px; }
+  .badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; }
+  .award { text-align: center; padding: 8px 4px; border: 1px solid var(--line); border-radius: 12px; font-size: 11px; color: var(--muted); }
+  .award .ic { display: block; font-size: 24px; margin-bottom: 3px; }
+  .award.locked .ic { filter: grayscale(1); opacity: .35; }
+  .award.got { color: var(--text); border-color: var(--accent); }
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 120px); z-index: 50;
+    background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 999px;
+    font-size: 14px; transition: transform .35s; max-width: calc(100% - 32px); text-align: center;
+  }
+  .toast.show { transform: translate(-50%, 0); }
+
+  /* Aufgaben mit Schätzung */
+  #taskForm .est { flex: none; width: 64px; }
+  .task-meta { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  #taskList li { cursor: pointer; border-left: 3px solid transparent; padding-left: 8px; margin-left: -11px; }
+  #taskList li.active { border-left-color: var(--accent); }
+  #taskList li label { cursor: pointer; }
+  .task-sum { display: flex; justify-content: space-between; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+  .task-sum b { color: var(--text); }
+  .current-task { font-size: 13px; color: var(--muted); margin-top: 6px; max-width: 200px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .current-task:empty { display: none; }
+
+  /* Schalter in den Einstellungen */
+  .toggle { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 14px; cursor: pointer; }
+  .toggle span { flex: 1; }
+  .toggle small { display: block; color: var(--muted); font-size: 12px; }
+  .toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
+  .row2 { display: flex; gap: 8px; }
+  .row2 .wide { margin-top: 6px; }
+
+  /* Vollbild-Fokusmodus */
+  body.zen main > :not(.ring-wrap):not(.controls):not(.topbar) { display: none !important; }
+  body.zen .topbar > :not(#zenBtn) { visibility: hidden; }
+  body.zen main { max-width: 560px; align-self: center; }
+  body.zen .ring-wrap { width: min(440px, 80vw); }
+  body.zen .time { font-size: clamp(64px, 14vw, 104px); }
+
+  /* Jahres-Kalender in der Statistik */
+  .heat { display: grid; grid-auto-flow: column; grid-template-rows: repeat(7, 1fr); gap: 3px; margin-top: 18px; }
+  .heat i { aspect-ratio: 1; border-radius: 3px; background: var(--track); }
+  .heat i[data-l="1"] { background: color-mix(in srgb, var(--accent) 30%, var(--track)); }
+  .heat i[data-l="2"] { background: color-mix(in srgb, var(--accent) 55%, var(--track)); }
+  .heat i[data-l="3"] { background: color-mix(in srgb, var(--accent) 80%, var(--track)); }
+  .heat i[data-l="4"] { background: var(--accent); }
+  .heat-legend { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; margin-top: 6px; }
+
+  .section-title { font-size: 20px; margin: 34px 0 4px; }
+  .section-sub { color: var(--muted); font-size: 14px; margin: 0 0 12px; line-height: 1.4; }
+  details {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px; margin-top: 8px;
+  }
+  summary {
+    list-style: none; cursor: pointer; padding: 14px 16px; font-weight: 600; font-size: 15px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; margin-left: auto; color: var(--muted); font-size: 20px; font-weight: 400; }
+  details[open] summary::after { content: "–"; }
+  details .body { padding: 0 16px 14px; font-size: 14px; line-height: 1.55; }
+  details .body p { margin: 0 0 8px; }
+  details .body ul { margin: 0; padding: 0; }
+  details .body li { display: block; border: 0; padding: 0 0 6px 18px; position: relative; }
+  details .body li::before { content: "•"; position: absolute; left: 4px; color: var(--accent); }
+  .try { background: var(--bg); border-radius: 10px; padding: 8px 10px; font-size: 13px; }
+
+  .steps { counter-reset: s; display: grid; gap: 8px; }
+  .steps div {
+    counter-increment: s; background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 12px 14px 12px 50px; position: relative; font-size: 14px; line-height: 1.45;
+  }
+  .steps div::before {
+    content: counter(s); position: absolute; left: 14px; top: 12px; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--accent); color: #fff; font-weight: 700; font-size: 13px; display: grid; place-items: center;
+  }
+  footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 30px; }
+
+  .breath-wrap { display: grid; place-items: center; height: 240px; }
+  .breath {
+    width: 90px; height: 90px; border-radius: 50%; background: var(--accent); opacity: .85;
+    transition: transform 4s ease-in-out;
+  }
+  .breath.big { transform: scale(2.2); }
+  #breathText { text-align: center; font-size: 20px; font-weight: 600; margin: 0; }
+  #breathCount { text-align: center; color: var(--muted); font-size: 14px; margin: 4px 0 0; }
 </style>
 </head>
 <body>
@@ -181,13 +340,18 @@
     <button class="badge" id="proBadge">PRO</button>
     <button class="icon-btn" id="openStats" title="Statistik" aria-label="Statistik">📊</button>
     <button class="icon-btn" id="openSettings" title="Einstellungen" aria-label="Einstellungen">⚙️</button>
+    <button class="icon-btn" id="zenBtn" title="Vollbild-Fokus (F)" aria-label="Vollbild-Fokus">⛶</button>
   </div>
+
+  <p class="quote" id="quote"></p>
 
   <div class="modes" role="tablist">
     <button data-mode="focus" class="active">Fokus</button>
     <button data-mode="short">Kurze Pause</button>
     <button data-mode="long">Lange Pause</button>
   </div>
+
+  <div class="presets" id="presets" aria-label="Lernmethode"></div>
 
   <div class="ring-wrap">
     <svg viewBox="0 0 120 120">
@@ -197,6 +361,7 @@
     <div class="center">
       <div class="time" id="time">25:00</div>
       <div class="label" id="label">Bereit zum Fokussieren</div>
+      <div class="current-task" id="currentTask"></div>
     </div>
   </div>
 
@@ -206,26 +371,231 @@
     <button id="skip" title="Überspringen (S)">⏭</button>
   </div>
 
-  <div class="today">
-    <span id="todayText">Heute: 0 Fokusblöcke</span>
+  <div class="break-box" id="breakBox">
+    <p id="breakTip"></p>
+    <div class="row">
+      <button class="pill" id="openBreath">🫁 Atemübung (1 Min)</button>
+      <button class="pill" id="nextTip">🔀 Andere Idee</button>
+    </div>
+    <p class="small" id="parkedHint" style="margin:10px 0 0"></p>
+  </div>
+
+  <div class="plant">
+    <div class="emoji" id="plantEmoji">🌰</div>
+    <div class="info">
+      <b id="todayText">Heute: 0 Fokusblöcke</b>
+      <span id="plantText">Starte einen Block, dann keimt deine Fokus-Pflanze.</span>
+    </div>
     <div class="dots" id="dots"></div>
   </div>
 
-  <section class="tasks">
+  <section class="card" id="goalCard">
+    <h2>Tagesziel &amp; Streak <small id="goalCount">0/4</small></h2>
+    <div class="goal-row">
+      <div class="goal-text" id="goalText">Wie viele Fokusblöcke willst du heute schaffen?</div>
+      <div class="stepper">
+        <button id="goalMinus" aria-label="Ziel verringern">−</button>
+        <b id="goalValue">4</b>
+        <button id="goalPlus" aria-label="Ziel erhöhen">+</button>
+      </div>
+    </div>
+    <div class="meter" id="goalMeter"><i></i></div>
+    <div class="streak">
+      <div><b id="streakNow">0</b><span>🔥 Tage am Stück</span></div>
+      <div><b id="streakBest">0</b><span>🏆 Rekord</span></div>
+      <div><b id="totalBlocks">0</b><span>✅ Blöcke gesamt</span></div>
+    </div>
+    <div class="badges" id="badges"></div>
+  </section>
+
+  <section class="card" id="checkCard">
+    <h2>Bereit-Check <small id="checkCount">0/6</small></h2>
+    <p class="small">Kurz durchgehen, bevor du startest. Setzt sich jeden Tag zurück.</p>
+    <div class="meter"><i id="checkMeter"></i></div>
+    <ul id="checkList"></ul>
+  </section>
+
+  <section class="card">
+    <h2>Gedanken-Parkplatz <small>Taste G</small></h2>
+    <p class="small">Dir fällt mitten im Lernen etwas ein („Mama zurückrufen“, „Video anschauen“)? Park es hier und kümmer dich in der Pause darum, statt jetzt abzuschweifen.</p>
+    <form id="parkForm">
+      <input type="text" id="parkInput" placeholder="Gedanke kurz notieren …" autocomplete="off">
+      <button type="submit">Parken</button>
+    </form>
+    <ul id="parkList"></ul>
+  </section>
+
+  <section class="tasks card">
     <h2>Aufgaben für diese Session</h2>
     <form id="taskForm">
       <input type="text" id="taskInput" placeholder="Woran arbeitest du?" autocomplete="off">
+      <input type="number" id="taskEst" class="est" min="1" max="20" value="1" title="Wie viele Fokusblöcke brauchst du ungefähr?" aria-label="Geschätzte Blöcke">
       <button type="submit" aria-label="Hinzufügen">+</button>
     </form>
     <ul id="taskList"></ul>
-    <p class="empty" id="empty">Noch keine Aufgaben, füge oben eine hinzu.</p>
+    <p class="empty" id="empty">Noch keine Aufgaben. Schreib oben, woran du arbeitest, und schätz, wie viele Blöcke du brauchst.</p>
+    <div class="task-sum" id="taskSum"></div>
   </section>
 
-  <p class="hint">Leertaste: Start/Pause · R: Zurücksetzen · S: Überspringen</p>
+  <p class="hint">Leertaste: Start/Pause · R: Zurücksetzen · S: Überspringen · G: Gedanken parken · F: Vollbild<br>Tipp: Klick auf eine Aufgabe, um gerade an ihr zu arbeiten.</p>
+
+  <h2 class="section-title">So holst du das Meiste raus</h2>
+  <p class="section-sub">In vier Schritten zu einer richtig guten Lernsession.</p>
+  <div class="steps">
+    <div><b>Methode wählen.</b> Unter dem Timer: Pomodoro zum Einsteigen, Deep Work für lange Aufgaben, Mini-Sprint wenn du gar keine Lust hast.</div>
+    <div><b>Bereit-Check abhaken.</b> Handy weg, Wasser da, Ziel klar. Zwei Minuten Vorbereitung sparen dir eine halbe Stunde Ablenkung.</div>
+    <div><b>Eine Aufgabe, ein Block.</b> Schreib auf, was du in <i>diesem</i> Block schaffen willst. Kleine, konkrete Schritte statt „Mathe lernen“.</div>
+    <div><b>Pause ist Pause.</b> Aufstehen, bewegen, atmen. Nicht scrollen, sonst ist dein Kopf danach müder als vorher.</div>
+  </div>
+
+  <h2 class="section-title">Lern-Wissen</h2>
+  <p class="section-sub">Methoden, die nachweislich besser funktionieren als „nochmal durchlesen“. Tipp auf ein Thema.</p>
+
+  <details>
+    <summary>🧠 Aktives Erinnern</summary>
+    <div class="body">
+      <p>Dein Gehirn merkt sich Dinge am besten, wenn es sie <b>selbst hervorholen</b> muss. Nochmal lesen fühlt sich gut an, bringt aber wenig.</p>
+      <ul>
+        <li>Buch zu, und schreib aus dem Kopf auf, was du gerade gelernt hast.</li>
+        <li>Mach aus jeder Überschrift eine Frage und beantworte sie, ohne zu spicken.</li>
+        <li>Karteikarten: Vorderseite Frage, Rückseite Antwort.</li>
+      </ul>
+      <p class="try">👉 Probier's: Nach jedem Fokusblock 2 Minuten lang alles aufschreiben, was hängen geblieben ist.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>📅 Verteiltes Wiederholen</summary>
+    <div class="body">
+      <p>Fünfmal eine Stunde verteilt bringt viel mehr als fünf Stunden am Stück am Abend vor der Prüfung.</p>
+      <ul>
+        <li>Wiederhole neuen Stoff nach <b>1 Tag, 3 Tagen, 1 Woche und 1 Monat</b>.</li>
+        <li>Fang früh an: Lieber jeden Tag 2 Blöcke als am Ende 10.</li>
+        <li>Was du schon gut kannst, seltener wiederholen, Schwieriges öfter.</li>
+      </ul>
+    </div>
+  </details>
+
+  <details>
+    <summary>🧒 Erklär's einem Kind (Feynman)</summary>
+    <div class="body">
+      <p>Wenn du etwas einfach erklären kannst, hast du es verstanden.</p>
+      <ul>
+        <li>Erklär das Thema laut, als würdest du es einem 12-Jährigen beibringen.</li>
+        <li>Wo du stockst oder Fachwörter brauchst, ist deine Lücke.</li>
+        <li>Lücke nachlesen, nochmal erklären, bis es flüssig klappt.</li>
+      </ul>
+    </div>
+  </details>
+
+  <details>
+    <summary>🔀 Mischen statt Blöcke</summary>
+    <div class="body">
+      <p>Statt 20 gleiche Aufgaben hintereinander lieber verschiedene Aufgabentypen abwechseln. Das ist anstrengender, aber du lernst dabei zu erkennen, <i>welcher</i> Lösungsweg passt. Genau das brauchst du in der Prüfung.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>🖍️ Markieren ist nicht Lernen</summary>
+    <div class="body">
+      <p>Halbe Seiten gelb anmalen fühlt sich produktiv an, bleibt aber kaum hängen. Besser:</p>
+      <ul>
+        <li>Pro Abschnitt höchstens einen Satz markieren.</li>
+        <li>Am Rand eine Frage notieren, die der Abschnitt beantwortet.</li>
+        <li>Eigene Zusammenfassung in eigenen Worten schreiben.</li>
+      </ul>
+    </div>
+  </details>
+
+  <h2 class="section-title">Worauf du achten solltest</h2>
+  <p class="section-sub">Die kleinen Dinge, die über eine gute oder verschwendete Session entscheiden.</p>
+
+  <details>
+    <summary>📵 Handy &amp; Ablenkungen</summary>
+    <div class="body">
+      <ul>
+        <li>Handy in einen <b>anderen Raum</b>. Schon ein Handy, das nur auf dem Tisch liegt, zieht Aufmerksamkeit.</li>
+        <li>Benachrichtigungen am PC aus („Nicht stören“ bzw. Fokus-Assistent).</li>
+        <li>Nur die Tabs offen, die du für diese Aufgabe brauchst.</li>
+        <li>Wenn dir was einfällt: in den Gedanken-Parkplatz, nicht sofort googeln.</li>
+      </ul>
+    </div>
+  </details>
+
+  <details>
+    <summary>☕ Pausen richtig machen</summary>
+    <div class="body">
+      <ul>
+        <li>Steh auf und beweg dich, auch nur kurz durchs Zimmer.</li>
+        <li><b>20-20-20-Regel</b> für die Augen: 20 Sekunden lang etwas in ca. 6 Metern Entfernung anschauen.</li>
+        <li>Kein Social Media in der kurzen Pause. Es frisst mehr Konzentration, als es bringt, und aus 5 Minuten werden schnell 30.</li>
+        <li>Nach 4 Blöcken eine lange Pause: raus an die frische Luft, etwas essen.</li>
+      </ul>
+    </div>
+  </details>
+
+  <details>
+    <summary>😴 Schlaf, Essen, Wasser</summary>
+    <div class="body">
+      <ul>
+        <li>Im Schlaf sortiert dein Gehirn das Gelernte. <b>Die Nacht vor der Prüfung durchlernen</b> schadet meistens mehr, als es hilft.</li>
+        <li>Ein Glas Wasser neben dem Platz. Schon leichter Durst macht müde und unkonzentriert.</li>
+        <li>Lieber kleine Snacks (Nüsse, Obst) als ein riesiges Mittagessen direkt vor dem Lernen.</li>
+      </ul>
+    </div>
+  </details>
+
+  <details>
+    <summary>🚀 Keine Lust anzufangen?</summary>
+    <div class="body">
+      <ul>
+        <li><b>2-Minuten-Regel:</b> Nimm dir nur vor, 2 Minuten anzufangen. Meistens machst du danach einfach weiter.</li>
+        <li>Wähl die Methode „Mini-Sprint“ (15 Min). Das schafft man immer.</li>
+        <li>Zerleg die Aufgabe so klein, dass der erste Schritt lächerlich einfach ist („Heft aufschlagen“).</li>
+        <li>Belohn dich nach geschafften Blöcken, z. B. mit einer Folge deiner Serie nach 4 Blöcken.</li>
+      </ul>
+    </div>
+  </details>
+
+  <details>
+    <summary>📝 Vor einer Prüfung</summary>
+    <div class="body">
+      <ul>
+        <li>Mach dir 2–3 Wochen vorher einen Plan: Welche Themen, an welchem Tag?</li>
+        <li>Rechne alte Prüfungen oder Übungsaufgaben unter Zeitdruck, wie in der echten Prüfung.</li>
+        <li>Die letzten 1–2 Tage nur wiederholen, nichts Neues mehr anfangen.</li>
+        <li>Am Abend vorher: Sachen packen, früh schlafen.</li>
+      </ul>
+    </div>
+  </details>
+
+  <footer>Fokus-Timer · Ohne Anmeldung, alle Daten bleiben nur in diesem Browser.<br>Funktioniert auch offline: im Browser-Menü „App installieren“ bzw. „Zum Startbildschirm“.</footer>
 </main>
+
+<dialog id="breath">
+  <h2>Atemübung <button class="close" data-close aria-label="Schließen">×</button></h2>
+  <p class="small" style="margin:0">Box-Atmung: je 4 Sekunden einatmen, halten, ausatmen, halten. Beruhigt und macht den Kopf frei.</p>
+  <div class="breath-wrap"><div class="breath" id="breathCircle"></div></div>
+  <p id="breathText">Bereit?</p>
+  <p id="breathCount"></p>
+</dialog>
 
 <dialog id="settings">
   <h2>Einstellungen <button class="close" data-close aria-label="Schließen">×</button></h2>
+  <h3 style="margin-top:0">Allgemein</h3>
+  <label class="toggle"><span>Pausen automatisch starten<small>Nach dem Fokusblock läuft die Pause sofort los.</small></span><input type="checkbox" data-pref="autoBreak"></label>
+  <label class="toggle"><span>Fokus automatisch starten<small>Nach der Pause geht es direkt weiter.</small></span><input type="checkbox" data-pref="autoFocus"></label>
+  <label class="toggle"><span>Benachrichtigung am Ende<small>Auch wenn du gerade in einem anderen Tab bist.</small></span><input type="checkbox" data-pref="notify"></label>
+  <label class="toggle"><span>Bildschirm anlassen<small>Verhindert, dass Handy oder Laptop während des Timers dunkel werden.</small></span><input type="checkbox" data-pref="wake"></label>
+  <h3>Deine Daten</h3>
+  <p class="small" style="margin:0">Alles bleibt nur in diesem Browser. Mach ab und zu eine Sicherung, z. B. bevor du den Verlauf löschst oder den Computer wechselst.</p>
+  <div class="row2">
+    <button class="wide ghost" id="exportBtn">⬇️ Sichern</button>
+    <button class="wide ghost" id="importBtn">⬆️ Laden</button>
+  </div>
+  <input type="file" id="importFile" accept="application/json,.json" hidden>
+  <p class="msg" id="dataMsg"></p>
+  <h3>Pro</h3>
   <div class="lock" id="settingsLock">
     <span>🔒 Diese Einstellungen gibt es mit <b>Pro</b>.</span>
     <button data-unlock>Freischalten</button>
@@ -254,6 +624,8 @@
   </fieldset>
 </dialog>
 
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
 <dialog id="stats">
   <h2>Deine Woche <button class="close" data-close aria-label="Schließen">×</button></h2>
   <div class="stat-row">
@@ -262,13 +634,18 @@
   </div>
   <div class="chart-wrap">
     <div class="chart" id="chart"></div>
+    <div id="heatWrap">
+      <h3>Die letzten 6 Monate</h3>
+      <div class="heat" id="heat"></div>
+      <div class="heat-legend"><span id="heatTotal"></span><span>weniger ▢ ▣ ■ mehr</span></div>
+    </div>
     <div class="overlay" id="chartLock"><button class="lock" data-unlock style="cursor:pointer">🔒 Statistik mit Pro freischalten</button></div>
   </div>
 </dialog>
 
 <dialog id="unlock">
   <h2>Fokus-Timer Pro <button class="close" data-close aria-label="Schließen">×</button></h2>
-  <p class="small">Eigene Zeiten, Wochen-Statistik, Hintergrundgeräusche und Farben. Einmal zahlen, für immer nutzen.</p>
+  <p class="small">Eigene Zeiten, Wochen-Statistik mit 6-Monats-Kalender, Hintergrundgeräusche und Farben. Einmal zahlen, für immer nutzen.</p>
   <a class="wide" id="buyBtn" target="_blank" rel="noopener">Pro kaufen</a>
   <h3>Schon gekauft?</h3>
   <form id="keyForm" style="display:flex; gap:8px">
@@ -311,9 +688,18 @@ function minutesOn(d) {
   return store.get("fokus-min-" + key, store.get("fokus-" + key, 0) * 25);
 }
 
+const PRESETS = {
+  pomodoro: { name: "🍅 Pomodoro",   focus: 25, short: 5,  long: 15 },
+  deep:     { name: "🧠 Deep Work",  focus: 50, short: 10, long: 30 },
+  rhythm:   { name: "⚡ 52/17",      focus: 52, short: 17, long: 30 },
+  exam:     { name: "📚 Prüfung",    focus: 90, short: 20, long: 30 },
+  mini:     { name: "🐣 Mini-Sprint", focus: 15, short: 3,  long: 10 }
+};
+
 let isPro = !!store.get("fokus-pro", null);
 let settings = { ...DEFAULTS, ...store.get("fokus-settings", {}) };
-const cfg = () => isPro ? settings : DEFAULTS;
+let preset = PRESETS[store.get("fokus-preset", "pomodoro")] ? store.get("fokus-preset", "pomodoro") : "pomodoro";
+const cfg = () => isPro ? settings : { ...DEFAULTS, ...PRESETS[preset] };
 const duration = m => cfg()[m] * 60;
 
 const todayKey = "fokus-" + dayKey(new Date());
@@ -342,33 +728,350 @@ function render() {
     b.classList.toggle("active", b.dataset.mode === mode));
 }
 
-function renderToday() {
-  $("todayText").textContent = `Heute: ${completedToday} Fokusblock${completedToday === 1 ? "" : "e"}`;
-  $("dots").innerHTML = '<span class="dot"></span>'.repeat(completedToday);
+const PLANT = [[0, "🌰"], [1, "🌱"], [2, "🌿"], [4, "🪴"], [6, "🌳"], [8, "🌸"]];
+function renderToday(grew) {
+  $("todayText").textContent = `Heute: ${completedToday} Fokus${completedToday === 1 ? "block" : "blöcke"}`;
+  $("dots").innerHTML = '<span class="dot"></span>'.repeat(Math.min(completedToday, 12));
+  const stage = PLANT.filter(([n]) => completedToday >= n).pop();
+  const next = PLANT.find(([n]) => n > completedToday);
+  $("plantEmoji").textContent = stage[1];
+  $("plantText").textContent = completedToday === 0
+    ? "Starte einen Block, dann keimt deine Fokus-Pflanze."
+    : next
+      ? `Noch ${next[0] - completedToday} ${next[0] - completedToday === 1 ? "Block" : "Blöcke"} bis ${next[1]}`
+      : "Voll erblüht! Starker Tag. 💪";
+  if (grew) {
+    const el = $("plantEmoji");
+    el.classList.remove("grow"); void el.offsetWidth; el.classList.add("grow");
+  }
 }
+
+// ---- Tagesziel, Streak & Abzeichen ----
+let dailyGoal = store.get("fokus-goal", 4);
+let badges = store.get("fokus-badges", {});
+
+function blocksOn(d) { return store.get("fokus-" + dayKey(d), 0); }
+
+function totalBlocks() {
+  let sum = 0;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (/^fokus-\d{4}-\d{2}-\d{2}$/.test(k)) sum += store.get(k, 0);
+    }
+  } catch { sum = completedToday; }
+  return sum;
+}
+
+// Heute zählt mit, sobald ein Block geschafft ist. Bis dahin lebt der Streak von gestern weiter.
+function currentStreak() {
+  let n = 0;
+  for (let i = blocksOn(daysAgo(0)) > 0 ? 0 : 1; blocksOn(daysAgo(i)) > 0; i++) n++;
+  return n;
+}
+
+const BADGES = [
+  { id: "first",   ic: "🌱", name: "Erster Block",  test: s => s.total >= 1 },
+  { id: "goal",    ic: "🎯", name: "Ziel erreicht", test: s => s.goalHit },
+  { id: "s3",      ic: "🔥", name: "3 Tage Streak", test: s => s.streak >= 3 },
+  { id: "s7",      ic: "⚡", name: "7 Tage Streak", test: s => s.streak >= 7 },
+  { id: "day8",    ic: "🌸", name: "8 an einem Tag", test: s => s.today >= 8 },
+  { id: "t50",     ic: "💯", name: "50 Blöcke",     test: s => s.total >= 50 },
+  { id: "s30",     ic: "👑", name: "30 Tage Streak", test: s => s.streak >= 30 },
+  { id: "t250",    ic: "🚀", name: "250 Blöcke",    test: s => s.total >= 250 }
+];
+
+function toast(text) {
+  const t = $("toast");
+  t.textContent = text;
+  t.classList.add("show");
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => t.classList.remove("show"), 3500);
+}
+
+function renderGoal(justFinished) {
+  const streak = currentStreak();
+  const total = totalBlocks();
+  const best = Math.max(store.get("fokus-best-streak", 0), streak);
+  store.set("fokus-best-streak", best);
+  const reached = completedToday >= dailyGoal;
+
+  $("goalValue").textContent = dailyGoal;
+  $("goalCount").textContent = `${Math.min(completedToday, dailyGoal)}/${dailyGoal}`;
+  $("goalMeter").firstElementChild.style.width = Math.min(100, completedToday / dailyGoal * 100) + "%";
+  $("goalMeter").classList.toggle("reached", reached);
+  $("goalText").textContent = reached
+    ? "Tagesziel geschafft! 🎉 Alles ab jetzt ist Bonus."
+    : completedToday === 0
+      ? "Wie viele Fokusblöcke willst du heute schaffen?"
+      : `Noch ${dailyGoal - completedToday} ${dailyGoal - completedToday === 1 ? "Block" : "Blöcke"} bis zum Ziel.`;
+  $("streakNow").textContent = streak;
+  $("streakBest").textContent = best;
+  $("totalBlocks").textContent = total;
+
+  const stats = { total, streak, today: completedToday, goalHit: reached };
+  const fresh = BADGES.filter(b => !badges[b.id] && b.test(stats));
+  fresh.forEach(b => badges[b.id] = dayKey(new Date()));
+  if (fresh.length) store.set("fokus-badges", badges);
+  if (justFinished) {
+    if (fresh.length) toast(`Neues Abzeichen: ${fresh.map(b => b.ic + " " + b.name).join(", ")}`);
+    else if (reached && completedToday === dailyGoal) toast("🎯 Tagesziel erreicht! Stark.");
+  }
+
+  $("badges").innerHTML = "";
+  BADGES.forEach(b => {
+    const el = document.createElement("div");
+    el.className = "award " + (badges[b.id] ? "got" : "locked");
+    el.title = badges[b.id] ? `Erhalten am ${badges[b.id].split("-").reverse().join(".")}` : "Noch nicht freigeschaltet";
+    el.innerHTML = `<span class="ic">${b.ic}</span>${b.name}`;
+    $("badges").appendChild(el);
+  });
+}
+
+function changeGoal(delta) {
+  dailyGoal = Math.min(16, Math.max(1, dailyGoal + delta));
+  store.set("fokus-goal", dailyGoal);
+  renderGoal();
+}
+
+function renderPresets() {
+  const c = cfg();
+  $("presets").innerHTML = "";
+  Object.entries(PRESETS).forEach(([key, p]) => {
+    const b = document.createElement("button");
+    const active = c.focus === p.focus && c.short === p.short && c.long === p.long;
+    b.className = active ? "active" : "";
+    b.innerHTML = `${p.name}<small>${p.focus} / ${p.short} Min</small>`;
+    b.onclick = () => choosePreset(key);
+    $("presets").appendChild(b);
+  });
+}
+
+function choosePreset(key) {
+  const p = PRESETS[key];
+  preset = key;
+  store.set("fokus-preset", key);
+  if (isPro) { settings.focus = p.focus; settings.short = p.short; settings.long = p.long; store.set("fokus-settings", settings); }
+  if (!ticker) remaining = duration(mode);
+  renderPresets();
+  render();
+}
+
+// ---- Pausen-Ideen ----
+const BREAK_TIPS = [
+  "🚶 Steh auf und lauf ein paar Schritte, gern durch die ganze Wohnung.",
+  "💧 Trink ein großes Glas Wasser.",
+  "👀 20-20-20: Schau 20 Sekunden aus dem Fenster in die Ferne.",
+  "🙆 Streck dich: Arme hoch, Schultern kreisen, Nacken locker machen.",
+  "🪟 Fenster auf und ein paar Mal tief durchatmen.",
+  "🧠 Erzähl dir in Gedanken, was du gerade gelernt hast, ohne nachzuschauen.",
+  "🍎 Hol dir einen kleinen Snack, z. B. Obst oder Nüsse.",
+  "🎵 Hör ein einziges Lied, das dich gut drauf bringt.",
+  "🧹 Räum kurz deinen Tisch auf, damit der nächste Block frisch startet.",
+  "🤸 10 Kniebeugen oder Hampelmänner: bringt den Kreislauf in Schwung."
+];
+let tipIndex = Math.floor(Math.random() * BREAK_TIPS.length);
+function newTip() {
+  tipIndex = (tipIndex + 1 + Math.floor(Math.random() * (BREAK_TIPS.length - 1))) % BREAK_TIPS.length;
+  $("breakTip").textContent = BREAK_TIPS[tipIndex];
+}
+function renderBreak() {
+  $("breakBox").classList.toggle("show", mode !== "focus");
+  const n = parked.length;
+  $("parkedHint").textContent = n ? `💭 Du hast ${n} geparkte${n === 1 ? "n Gedanken" : " Gedanken"}. Jetzt ist ein guter Moment dafür.` : "";
+}
+
+// ---- Atemübung ----
+let breathTimer = null;
+function startBreath() {
+  const steps = [["Einatmen", true], ["Halten", true], ["Ausatmen", false], ["Halten", false]];
+  let i = 0, rounds = 0, sec = 4;
+  const circle = $("breathCircle");
+  const show = () => {
+    $("breathText").textContent = steps[i][0] + " … " + sec;
+    circle.classList.toggle("big", steps[i][1]);
+  };
+  $("breathCount").textContent = "Runde 1 von 4";
+  show();
+  breathTimer = setInterval(() => {
+    sec--;
+    if (sec === 0) {
+      sec = 4; i = (i + 1) % 4;
+      if (i === 0) rounds++;
+      if (rounds === 4) { stopBreath(); $("breathText").textContent = "Fertig. Gut gemacht! 🌿"; $("breathCount").textContent = ""; return; }
+      $("breathCount").textContent = `Runde ${rounds + 1} von 4`;
+    }
+    show();
+  }, 1000);
+}
+function stopBreath() {
+  clearInterval(breathTimer); breathTimer = null;
+  $("breathCircle").classList.remove("big");
+}
+
+// ---- Bereit-Check ----
+const CHECKS = [
+  "📵 Handy in einem anderen Raum oder auf lautlos",
+  "🔕 Benachrichtigungen am PC aus",
+  "💧 Wasser steht bereit",
+  "🎯 Ziel für den ersten Block ist klar",
+  "📚 Alles Material liegt da",
+  "🪑 Ordentlicher Platz, gutes Licht"
+];
+const checkKey = "fokus-check-" + dayKey(new Date());
+let checked = store.get(checkKey, []);
+function renderChecks() {
+  const list = $("checkList");
+  list.innerHTML = "";
+  CHECKS.forEach((text, i) => {
+    const li = document.createElement("li");
+    const on = checked.includes(i);
+    if (on) li.className = "done";
+    li.innerHTML = `<input type="checkbox" id="c${i}" ${on ? "checked" : ""}><label for="c${i}"></label>`;
+    li.querySelector("label").textContent = text;
+    li.querySelector("input").onchange = e => {
+      checked = e.target.checked ? [...checked, i] : checked.filter(x => x !== i);
+      store.set(checkKey, checked);
+      renderChecks();
+    };
+    list.appendChild(li);
+  });
+  $("checkCount").textContent = `${checked.length}/${CHECKS.length}${checked.length === CHECKS.length ? " ✓" : ""}`;
+  $("checkMeter").style.width = (checked.length / CHECKS.length * 100) + "%";
+}
+
+// ---- Gedanken-Parkplatz ----
+let parked = store.get("fokus-parked", []);
+function renderParked() {
+  const list = $("parkList");
+  list.innerHTML = "";
+  parked.forEach((text, i) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<label></label><button class="del" aria-label="Erledigt">✓</button>`;
+    li.querySelector("label").textContent = "💭 " + text;
+    li.querySelector(".del").onclick = () => { parked.splice(i, 1); saveParked(); };
+    list.appendChild(li);
+  });
+  renderBreak();
+}
+function saveParked() { store.set("fokus-parked", parked); renderParked(); }
+
+// ---- Spruch des Tages ----
+const QUOTES = [
+  "Du musst nicht motiviert sein. Du musst nur anfangen.",
+  "Ein Block nach dem anderen. Mehr ist es nicht.",
+  "Kleine Schritte jeden Tag schlagen große Schritte ab und zu.",
+  "Fokus heißt auch: zu allem anderen kurz Nein sagen.",
+  "Heute ein bisschen besser als gestern reicht völlig.",
+  "Das Schwerste ist der Start. Der kostet nur einen Klick.",
+  "Pausen gehören zum Lernen, nicht zum Aufgeben.",
+  "Disziplin ist, sich daran zu erinnern, was man wirklich will.",
+  "Perfekt ist nicht nötig. Dranbleiben schon.",
+  "Dein zukünftiges Ich wird sich für diesen Block bedanken."
+];
+function renderQuote() {
+  const d = new Date();
+  const doy = Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 864e5);
+  $("quote").textContent = "„" + QUOTES[doy % QUOTES.length] + "“";
+}
+
+// ---- Aufgaben ----
+// Ältere gespeicherte Aufgaben haben noch keine Schätzung, die bekommen hier Standardwerte.
+tasks = tasks.map((t, i) => ({ id: t.id || Date.now() + i, est: 1, act: 0, ...t }));
+let activeTask = store.get("fokus-active", null);
+const currentTask = () => tasks.find(t => t.id === activeTask && !t.done);
 
 function renderTasks() {
   const list = $("taskList");
   list.innerHTML = "";
   tasks.forEach((t, i) => {
     const li = document.createElement("li");
-    if (t.done) li.className = "done";
-    const id = "t" + i;
-    li.innerHTML = `<input type="checkbox" id="${id}" ${t.done ? "checked" : ""}><label for="${id}"></label><button class="del" aria-label="Löschen">×</button>`;
+    li.className = (t.done ? "done " : "") + (t.id === activeTask && !t.done ? "active" : "");
+    li.title = "Klicken, um gerade an dieser Aufgabe zu arbeiten";
+    li.innerHTML = `<input type="checkbox" aria-label="Erledigt" ${t.done ? "checked" : ""}><label></label><span class="task-meta">${t.act}/${t.est} 🍅</span><button class="del" aria-label="Löschen">×</button>`;
     li.querySelector("label").textContent = t.text;
+    li.querySelector("input").onclick = e => e.stopPropagation();
     li.querySelector("input").onchange = e => { t.done = e.target.checked; saveTasks(); };
-    li.querySelector(".del").onclick = () => { tasks.splice(i, 1); saveTasks(); };
+    li.querySelector(".del").onclick = e => { e.stopPropagation(); tasks.splice(i, 1); saveTasks(); };
+    li.onclick = () => { if (!t.done) { activeTask = t.id; store.set("fokus-active", activeTask); renderTasks(); } };
     list.appendChild(li);
   });
   $("empty").style.display = tasks.length ? "none" : "block";
+
+  const open = tasks.filter(t => !t.done);
+  const left = open.reduce((n, t) => n + Math.max(1, t.est - t.act), 0);
+  if (open.length) {
+    // Grobe Endzeit: restliche Blöcke plus die Pausen dazwischen.
+    const c = cfg();
+    let min = 0;
+    for (let b = 1; b <= left; b++) {
+      min += c.focus;
+      if (b < left) min += (completedToday + b) % 4 === 0 ? c.long : c.short;
+    }
+    if (mode === "focus") min -= (duration("focus") - remaining) / 60;
+    else min += remaining / 60;
+    const end = new Date(Date.now() + min * 60000);
+    $("taskSum").innerHTML = `<span>Noch <b>${left}</b> ${left === 1 ? "Block" : "Blöcke"}</span><span>fertig ca. <b>${end.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })} Uhr</b></span>`;
+    $("taskSum").style.display = "flex";
+  } else {
+    $("taskSum").style.display = "none";
+  }
+  const cur = currentTask();
+  $("currentTask").textContent = cur ? "📌 " + cur.text : "";
 }
 
 function saveTasks() { store.set("fokus-tasks", tasks); renderTasks(); }
+
+// ---- Allgemeine Einstellungen (kostenlos) ----
+let prefs = { autoBreak: false, autoFocus: false, notify: false, wake: false, ...store.get("fokus-prefs", {}) };
+function renderPrefs() {
+  document.querySelectorAll("[data-pref]").forEach(i => i.checked = !!prefs[i.dataset.pref]);
+}
+document.querySelectorAll("[data-pref]").forEach(input => input.onchange = async () => {
+  const key = input.dataset.pref;
+  prefs[key] = input.checked;
+  if (key === "notify" && input.checked) {
+    if (!("Notification" in window)) { prefs.notify = false; toast("Dein Browser unterstützt keine Benachrichtigungen."); }
+    else if ((await Notification.requestPermission()) !== "granted") {
+      prefs.notify = false; toast("Benachrichtigungen sind im Browser blockiert.");
+    }
+  }
+  if (key === "wake" && input.checked && !("wakeLock" in navigator)) {
+    prefs.wake = false; toast("Dein Browser kann den Bildschirm leider nicht anlassen.");
+  }
+  store.set("fokus-prefs", prefs);
+  renderPrefs();
+  if (ticker) keepAwake(prefs.wake);
+});
+
+async function notify(title, body) {
+  if (!prefs.notify || !("Notification" in window) || Notification.permission !== "granted") return;
+  try {
+    const reg = await navigator.serviceWorker?.getRegistration();
+    if (reg) reg.showNotification(title, { body, icon: "icon-192.png", tag: "fokus" });
+    else new Notification(title, { body, icon: "icon-192.png" });
+  } catch {}
+}
+
+let wakeLock = null;
+async function keepAwake(on) {
+  try {
+    if (on && prefs.wake && !wakeLock && "wakeLock" in navigator) {
+      wakeLock = await navigator.wakeLock.request("screen");
+      wakeLock.addEventListener("release", () => { wakeLock = null; });
+    } else if (!on && wakeLock) {
+      await wakeLock.release(); wakeLock = null;
+    }
+  } catch { wakeLock = null; }
+}
+// Der Browser gibt die Sperre frei, wenn der Tab im Hintergrund war. Beim Zurückkommen neu holen.
+document.addEventListener("visibilitychange", () => { if (!document.hidden && ticker) keepAwake(true); });
 
 function start() {
   endTime = Date.now() + remaining * 1000;
   ticker = setInterval(tick, 250);
   if (mode === "focus") startSound();
+  keepAwake(true);
   render();
 }
 
@@ -376,6 +1079,7 @@ function pause() {
   clearInterval(ticker);
   ticker = null;
   stopSound();
+  keepAwake(false);
   render();
 }
 
@@ -389,6 +1093,8 @@ function setMode(next) {
   pause();
   mode = next;
   remaining = duration(mode);
+  if (mode !== "focus") newTip();
+  renderBreak();
   render();
 }
 
@@ -402,11 +1108,20 @@ function finish() {
     store.set(todayKey, completedToday);
     const minKey = "fokus-min-" + dayKey(new Date());
     store.set(minKey, store.get(minKey, (completedToday - 1) * 25) + minutes);
-    renderToday();
+    const cur = currentTask();
+    if (cur) { cur.act++; store.set("fokus-tasks", tasks); }
+    renderToday(true);
+    renderGoal(true);
     setMode(completedToday % 4 === 0 ? "long" : "short");
+    notify("Fokusblock geschafft! 🎉", `${LABELS[mode]}: ${cfg()[mode]} Minuten. ${BREAK_TIPS[tipIndex]}`);
+    if (prefs.autoBreak) start();
   } else {
     setMode("focus");
+    const next = currentTask();
+    notify("Pause vorbei ⏰", next ? `Weiter mit: ${next.text}` : "Zeit für den nächsten Fokusblock.");
+    if (prefs.autoFocus) start();
   }
+  renderTasks();
 }
 
 // ---- Töne ----
@@ -486,6 +1201,7 @@ function renderPro() {
   $("proFields").disabled = !isPro;
   $("chartLock").style.display = isPro ? "none" : "flex";
   $("chart").classList.toggle("blur", !isPro);
+  $("heatWrap").classList.toggle("blur", !isPro);
   $("buyBtn").href = BUY_URL || "#";
   $("buyBtn").textContent = BUY_URL ? "Pro kaufen" : "Kaufen bald verfügbar";
 }
@@ -503,6 +1219,7 @@ function saveSettings() {
   renderSettings();
   if (!ticker) remaining = duration(mode);
   if (noise) { stopSound(); if (ticker && mode === "focus") startSound(); }
+  renderPresets();
   render();
 }
 
@@ -532,7 +1249,68 @@ function renderStats() {
   let streak = 0, i = minutesOn(new Date()) ? 0 : 1;
   while (i < 366 && minutesOn(daysAgo(i))) { streak++; i++; }
   $("statStreak").textContent = streak;
+
+  // Jahres-Kalender: 26 Wochen, jede Spalte eine Woche (Mo oben).
+  const weeks = 26, cells = [];
+  const offset = (new Date().getDay() + 6) % 7; // Tage seit Montag
+  let sum = 0;
+  for (let i = weeks * 7 - 7 + offset; i >= 0; i--) {
+    const min = minutesOn(daysAgo(i));
+    sum += min;
+    const l = !min ? 0 : min < 50 ? 1 : min < 100 ? 2 : min < 175 ? 3 : 4;
+    cells.push(`<i data-l="${l}" title="${daysAgo(i).toLocaleDateString("de-DE")}: ${min} Min"></i>`);
+  }
+  $("heat").innerHTML = cells.join("");
+  $("heatTotal").textContent = (sum / 60).toLocaleString("de-DE", { maximumFractionDigits: 0 }) + " Std insgesamt";
 }
+
+// ---- Vollbild-Fokus ----
+function toggleZen(on = !document.body.classList.contains("zen")) {
+  document.body.classList.toggle("zen", on);
+  $("zenBtn").textContent = on ? "✕" : "⛶";
+  try {
+    if (on && !document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {});
+    if (!on && document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+  } catch {}
+}
+document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement) toggleZen(false); });
+$("zenBtn").onclick = () => toggleZen();
+
+// ---- Daten sichern & laden ----
+// Der Pro-Schlüssel kommt bewusst nicht mit in die Sicherung, damit er nicht weitergegeben wird.
+$("exportBtn").onclick = () => {
+  const data = {};
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k.startsWith("fokus-") && k !== "fokus-pro") data[k] = localStorage.getItem(k);
+    }
+  } catch {}
+  const blob = new Blob([JSON.stringify({ app: "fokus-timer", version: 1, data }, null, 1)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `fokus-timer-sicherung-${dayKey(new Date())}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  $("dataMsg").className = "msg ok"; $("dataMsg").textContent = "Sicherung wurde heruntergeladen.";
+};
+$("importBtn").onclick = () => $("importFile").click();
+$("importFile").onchange = async e => {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  try {
+    const json = JSON.parse(await file.text());
+    if (json.app !== "fokus-timer" || typeof json.data !== "object") throw new Error();
+    if (!confirm("Sicherung laden? Deine aktuellen Daten in diesem Browser werden dabei überschrieben.")) return;
+    Object.entries(json.data).forEach(([k, v]) => {
+      if (k.startsWith("fokus-") && k !== "fokus-pro" && typeof v === "string") localStorage.setItem(k, v);
+    });
+    location.reload();
+  } catch {
+    $("dataMsg").className = "msg err"; $("dataMsg").textContent = "Das ist keine gültige Fokus-Timer-Sicherung.";
+  }
+};
 
 $("keyForm").onsubmit = async e => {
   e.preventDefault();
@@ -551,7 +1329,7 @@ $("keyForm").onsubmit = async e => {
     isPro = true;
     store.set("fokus-pro", { key, instance: data.instance?.id });
     msg.className = "msg ok"; msg.textContent = "Pro ist freigeschaltet. Danke! 🎉";
-    renderPro(); render();
+    renderPro(); renderPresets(); render();
   } catch (err) {
     msg.className = "msg err";
     msg.textContent = "Das hat nicht geklappt. Prüfe den Schlüssel und deine Internetverbindung.";
@@ -559,7 +1337,7 @@ $("keyForm").onsubmit = async e => {
 };
 
 // ---- Dialoge ----
-$("openSettings").onclick = () => { renderSettings(); $("settings").showModal(); };
+$("openSettings").onclick = () => { renderSettings(); renderPrefs(); $("dataMsg").textContent = ""; $("settings").showModal(); };
 $("openStats").onclick = () => { renderStats(); $("stats").showModal(); };
 $("proBadge").onclick = () => { if (!isPro) $("unlock").showModal(); };
 document.querySelectorAll("[data-unlock]").forEach(b => b.onclick = () => {
@@ -577,22 +1355,56 @@ $("taskForm").onsubmit = e => {
   e.preventDefault();
   const text = $("taskInput").value.trim();
   if (!text) return;
-  tasks.push({ text, done: false });
+  const est = Math.min(20, Math.max(1, Math.round(+$("taskEst").value) || 1));
+  const t = { id: Date.now(), text, done: false, est, act: 0 };
+  tasks.push(t);
+  if (!currentTask()) { activeTask = t.id; store.set("fokus-active", activeTask); }
   $("taskInput").value = "";
+  $("taskEst").value = 1;
   saveTasks();
 };
+
+$("parkForm").onsubmit = e => {
+  e.preventDefault();
+  const text = $("parkInput").value.trim();
+  if (!text) return;
+  parked.push(text);
+  $("parkInput").value = "";
+  $("parkInput").blur();
+  saveParked();
+};
+
+$("goalMinus").onclick = () => changeGoal(-1);
+$("goalPlus").onclick = () => changeGoal(1);
+
+$("nextTip").onclick = newTip;
+$("openBreath").onclick = () => { $("breath").showModal(); startBreath(); };
+$("breath").addEventListener("close", stopBreath);
 
 document.addEventListener("keydown", e => {
   if (e.target.tagName === "INPUT" || document.querySelector("dialog[open]")) return;
   if (e.code === "Space") { e.preventDefault(); $("toggle").click(); }
   if (e.key === "r" || e.key === "R") $("reset").click();
   if (e.key === "s" || e.key === "S") $("skip").click();
+  if (e.key === "g" || e.key === "G") { e.preventDefault(); $("parkInput").focus(); }
+  if (e.key === "f" || e.key === "F") toggleZen();
+  if (e.key === "Escape" && document.body.classList.contains("zen")) toggleZen(false);
 });
 
+// Offline-Modus & „App installieren“ (geht nur über http(s), nicht beim direkten Öffnen der Datei).
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+
 renderPro();
+renderQuote();
+renderPresets();
 render();
 renderToday();
+renderGoal();
 renderTasks();
+renderChecks();
+renderParked();
 </script>
 </body>
 </html>
