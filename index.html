@@ -1327,7 +1327,7 @@ $("keyForm").onsubmit = async e => {
     const data = await res.json();
     if (data.activated !== true || (STORE_ID && data.meta?.store_id !== STORE_ID)) throw new Error(data.error || "Ungültiger Schlüssel");
     isPro = true;
-    store.set("fokus-pro", { key, instance: data.instance?.id });
+    store.set("fokus-pro", { key, instance: data.instance?.id, checked: Date.now() });
     msg.className = "msg ok"; msg.textContent = "Pro ist freigeschaltet. Danke! 🎉";
     renderPro(); renderPresets(); render();
   } catch (err) {
@@ -1335,6 +1335,31 @@ $("keyForm").onsubmit = async e => {
     msg.textContent = "Das hat nicht geklappt. Prüfe den Schlüssel und deine Internetverbindung.";
   }
 };
+
+// Abos: Einmal pro Woche nachfragen, ob der Schlüssel noch gilt. Bei gekündigtem oder
+// abgelaufenem Abo wird Pro wieder gesperrt. Ohne Internet bleibt Pro einfach aktiv.
+async function recheckLicense() {
+  const pro = store.get("fokus-pro", null);
+  if (!pro?.key || Date.now() - (pro.checked || 0) < 7 * 864e5) return;
+  try {
+    const res = await fetch("https://api.lemonsqueezy.com/v1/licenses/validate", {
+      method: "POST",
+      headers: { "Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ license_key: pro.key, ...(pro.instance ? { instance_id: pro.instance } : {}) })
+    });
+    if (!res.ok && res.status >= 500) return;
+    const data = await res.json();
+    if (data.valid === true) {
+      store.set("fokus-pro", { ...pro, checked: Date.now() });
+    } else if (data.license_key || res.status === 404) {
+      // Nur sperren, wenn Lemon Squeezy wirklich „ungültig“ sagt, nicht bei sonstigen Fehlern.
+      try { localStorage.removeItem("fokus-pro"); } catch {}
+      isPro = false;
+      renderPro(); renderPresets(); render();
+      toast("Dein Pro-Abo ist abgelaufen. Du kannst es jederzeit erneuern. 💛");
+    }
+  } catch {}
+}
 
 // ---- Dialoge ----
 $("openSettings").onclick = () => { renderSettings(); renderPrefs(); $("dataMsg").textContent = ""; $("settings").showModal(); };
@@ -1397,6 +1422,7 @@ if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
 }
 
 renderPro();
+recheckLicense();
 renderQuote();
 renderPresets();
 render();
