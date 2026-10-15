@@ -647,18 +647,25 @@
   <h2>Fokusly Pro <button class="close" data-close aria-label="Schließen">×</button></h2>
   <p class="small">Eigene Zeiten, Wochen-Statistik mit 6-Monats-Kalender, Hintergrundgeräusche und Farben. Einmal zahlen, für immer nutzen.</p>
   <a class="wide" id="buyBtn" target="_blank" rel="noopener">Pro kaufen</a>
+  <p class="small" style="margin:8px 0 0">So geht's: Du zahlst sicher über PayPal. Danach bekommst du deinen persönlichen Pro-Schlüssel innerhalb von 24 Stunden an deine PayPal-E-Mail-Adresse.</p>
   <h3>Schon gekauft?</h3>
   <form id="keyForm" style="display:flex; gap:8px">
-    <input type="text" id="keyInput" placeholder="Lizenzschlüssel einfügen" autocomplete="off">
+    <input type="text" id="keyInput" placeholder="Schlüssel einfügen (FOKUSLY-…)" autocomplete="off">
     <button class="lock" style="margin:0; border:0" type="submit">OK</button>
   </form>
   <p class="msg" id="keyMsg"></p>
 </dialog>
 
 <script>
-// Verkauf: Diese beiden Werte nach dem Einrichten von Lemon Squeezy eintragen.
-const BUY_URL = "";   // Link zur Lemon-Squeezy-Kaufseite
-const STORE_ID = 0;   // Shop-ID aus Lemon Squeezy (Einstellungen → Stores)
+// Verkauf über PayPal: Den PayPal-Zahlungslink hier eintragen, sobald er angelegt ist.
+const BUY_URL = "";   // PayPal-Zahlungslink („Zahlungslinks und Schaltflächen“ im PayPal-Geschäftskonto)
+const PRICE = "4,99 €";
+// Öffentlicher Teil des Schlüsselpaars. Damit prüft die App, ob ein Pro-Schlüssel aus dem
+// Schlüssel-Generator stammt. Der geheime Teil liegt nur beim Verkäufer und gehört nie hierher.
+const LICENSE_PUBLIC_KEY = { kty: "EC", crv: "P-256", x: "JNkFNuiG3F2MNWV67FntRVEzXKuI1FYHeQa_mRRUgBM", y: "crneOu6Ox85ohNQKYj1roXY15zmuuL7GwsWrQavyoy8" };
+// Schlüssel, die gesperrt werden sollen (z. B. öffentlich geteilt oder Zahlung zurückgebucht):
+// die 8 Zeichen hinter „1.“ eintragen, die der Generator in seiner Liste anzeigt.
+const REVOKED = [];
 
 const DEFAULTS = { focus: 25, short: 5, long: 15, sound: "off", color: "orange" };
 const LABELS = { focus: "Fokuszeit", short: "Kurze Pause", long: "Lange Pause" };
@@ -1204,7 +1211,7 @@ function renderPro() {
   $("chart").classList.toggle("blur", !isPro);
   $("heatWrap").classList.toggle("blur", !isPro);
   $("buyBtn").href = BUY_URL || "#";
-  $("buyBtn").textContent = BUY_URL ? "Pro kaufen" : "Kaufen bald verfügbar";
+  $("buyBtn").textContent = BUY_URL ? `Mit PayPal kaufen · ${PRICE}` : "Kaufen bald verfügbar";
 }
 
 function renderSettings() {
@@ -1313,53 +1320,48 @@ $("importFile").onchange = async e => {
   }
 };
 
+// ---- Pro-Schlüssel prüfen ----
+// Format: FOKUSLY-<Inhalt>.<Unterschrift>. Die Unterschrift kann nur der Schlüssel-Generator
+// des Verkäufers erzeugen. Die Prüfung läuft komplett offline im Browser.
+const fromB64url = s => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0));
+async function checkLicense(key) {
+  try {
+    const m = /^FOKUSLY-([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)$/.exec(key.replace(/\s+/g, ""));
+    if (!m) return null;
+    const payload = fromB64url(m[1]);
+    const pub = await crypto.subtle.importKey("jwk", LICENSE_PUBLIC_KEY, { name: "ECDSA", namedCurve: "P-256" }, false, ["verify"]);
+    const ok = await crypto.subtle.verify({ name: "ECDSA", hash: "SHA-256" }, pub, fromB64url(m[2]), payload);
+    const id = new TextDecoder().decode(payload).split(".")[1];
+    return ok && id && !REVOKED.includes(id) ? id : null;
+  } catch { return null; }
+}
+
 $("keyForm").onsubmit = async e => {
   e.preventDefault();
   const key = $("keyInput").value.trim();
   const msg = $("keyMsg");
   if (!key) return;
-  msg.className = "msg"; msg.textContent = "Wird geprüft …";
-  try {
-    const res = await fetch("https://api.lemonsqueezy.com/v1/licenses/activate", {
-      method: "POST",
-      headers: { "Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ license_key: key, instance_name: "Fokusly Browser" })
-    });
-    const data = await res.json();
-    if (data.activated !== true || (STORE_ID && data.meta?.store_id !== STORE_ID)) throw new Error(data.error || "Ungültiger Schlüssel");
-    isPro = true;
-    store.set("fokus-pro", { key, instance: data.instance?.id, checked: Date.now() });
-    msg.className = "msg ok"; msg.textContent = "Pro ist freigeschaltet. Danke! 🎉";
-    renderPro(); renderPresets(); render();
-  } catch (err) {
+  const id = await checkLicense(key);
+  if (!id) {
     msg.className = "msg err";
-    msg.textContent = "Das hat nicht geklappt. Prüfe den Schlüssel und deine Internetverbindung.";
+    msg.textContent = "Dieser Schlüssel stimmt nicht. Kopier ihn am besten komplett aus der Mail (beginnt mit FOKUSLY-).";
+    return;
   }
+  isPro = true;
+  store.set("fokus-pro", { key: key.replace(/\s+/g, ""), id });
+  msg.className = "msg ok"; msg.textContent = "Pro ist freigeschaltet. Danke! 🎉";
+  renderPro(); renderPresets(); render();
 };
 
-// Abos: Einmal pro Woche nachfragen, ob der Schlüssel noch gilt. Bei gekündigtem oder
-// abgelaufenem Abo wird Pro wieder gesperrt. Ohne Internet bleibt Pro einfach aktiv.
+// Beim Start prüfen, ob der gespeicherte Schlüssel noch gültig ist (z. B. nicht gesperrt).
 async function recheckLicense() {
   const pro = store.get("fokus-pro", null);
-  if (!pro?.key || Date.now() - (pro.checked || 0) < 7 * 864e5) return;
-  try {
-    const res = await fetch("https://api.lemonsqueezy.com/v1/licenses/validate", {
-      method: "POST",
-      headers: { "Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ license_key: pro.key, ...(pro.instance ? { instance_id: pro.instance } : {}) })
-    });
-    if (!res.ok && res.status >= 500) return;
-    const data = await res.json();
-    if (data.valid === true) {
-      store.set("fokus-pro", { ...pro, checked: Date.now() });
-    } else if (data.license_key || res.status === 404) {
-      // Nur sperren, wenn Lemon Squeezy wirklich „ungültig“ sagt, nicht bei sonstigen Fehlern.
-      try { localStorage.removeItem("fokus-pro"); } catch {}
-      isPro = false;
-      renderPro(); renderPresets(); render();
-      toast("Dein Pro-Abo ist abgelaufen. Du kannst es jederzeit erneuern. 💛");
-    }
-  } catch {}
+  if (!pro) return;
+  if (!pro.key || !(await checkLicense(pro.key))) {
+    try { localStorage.removeItem("fokus-pro"); } catch {}
+    isPro = false;
+    renderPro(); renderPresets(); render();
+  }
 }
 
 // ---- Dialoge ----
