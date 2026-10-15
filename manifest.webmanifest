@@ -1,6 +1,6 @@
 {
-  "name": "Fokus-Timer",
-  "short_name": "Fokus",
+  "name": "Fokusly",
+  "short_name": "Fokusly",
   "description": "Pomodoro-Timer zum Lernen mit Tagesziel, Streak und Abzeichen.",
   "lang": "de",
   "start_url": "./",

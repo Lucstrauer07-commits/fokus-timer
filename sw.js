@@ -1,6 +1,6 @@
 // Offline-Unterstützung: Seite zuerst aus dem Netz laden (damit Updates ankommen),
 // ohne Internet die zuletzt gespeicherte Version nehmen.
-const CACHE = "fokus-v1";
+const CACHE = "fokus-v2";
 const FILES = ["./", "index.html", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", e => {

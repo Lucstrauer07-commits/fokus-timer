@@ -3,18 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Fokus-Timer · Kostenloser Pomodoro-Timer zum Lernen</title>
+<title>Fokusly · Kostenloser Pomodoro-Timer zum Lernen</title>
 <meta name="description" content="Kostenloser Pomodoro-Timer zum Lernen und Arbeiten: Aufgaben mit Schätzung, Tagesziel, Streak, Abzeichen, Pausen-Ideen und Atemübung. Ohne Anmeldung, funktioniert offline und als App.">
 <meta name="theme-color" content="#d9542b">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Fokus-Timer · Pomodoro-Timer zum Lernen">
+<meta property="og:title" content="Fokusly · Pomodoro-Timer zum Lernen">
 <meta property="og:description" content="Konzentrierter lernen mit Pomodoro-Timer, Tagesziel, Streak und Abzeichen. Kostenlos, ohne Anmeldung.">
 <meta property="og:image" content="icon-512.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-192.png">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebApplication","name":"Fokus-Timer","applicationCategory":"ProductivityApplication","operatingSystem":"Web","inLanguage":"de","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"}}
+{"@context":"https://schema.org","@type":"WebApplication","name":"Fokusly","applicationCategory":"ProductivityApplication","operatingSystem":"Web","inLanguage":"de","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"}}
 </script>
 <style>
   :root {
@@ -336,7 +336,7 @@
 <body>
 <main>
   <div class="topbar">
-    <h1>Fokus-Timer</h1>
+    <h1>Fokusly</h1>
     <button class="badge" id="proBadge">PRO</button>
     <button class="icon-btn" id="openStats" title="Statistik" aria-label="Statistik">📊</button>
     <button class="icon-btn" id="openSettings" title="Einstellungen" aria-label="Einstellungen">⚙️</button>
@@ -569,7 +569,7 @@
     </div>
   </details>
 
-  <footer>Fokus-Timer · Ohne Anmeldung, alle Daten bleiben nur in diesem Browser.<br>Funktioniert auch offline: im Browser-Menü „App installieren“ bzw. „Zum Startbildschirm“.</footer>
+  <footer>Fokusly · Ohne Anmeldung, alle Daten bleiben nur in diesem Browser.<br>Funktioniert auch offline: im Browser-Menü „App installieren“ bzw. „Zum Startbildschirm“.</footer>
 </main>
 
 <dialog id="breath">
@@ -644,7 +644,7 @@
 </dialog>
 
 <dialog id="unlock">
-  <h2>Fokus-Timer Pro <button class="close" data-close aria-label="Schließen">×</button></h2>
+  <h2>Fokusly Pro <button class="close" data-close aria-label="Schließen">×</button></h2>
   <p class="small">Eigene Zeiten, Wochen-Statistik mit 6-Monats-Kalender, Hintergrundgeräusche und Farben. Einmal zahlen, für immer nutzen.</p>
   <a class="wide" id="buyBtn" target="_blank" rel="noopener">Pro kaufen</a>
   <h3>Schon gekauft?</h3>
@@ -664,6 +664,7 @@ const DEFAULTS = { focus: 25, short: 5, long: 15, sound: "off", color: "orange" 
 const LABELS = { focus: "Fokuszeit", short: "Kurze Pause", long: "Lange Pause" };
 const DAYS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 const CIRC = 2 * Math.PI * 54;
+const PAGE_TITLE = document.title;
 
 const $ = id => document.getElementById(id);
 const progress = $("progress");
@@ -721,7 +722,7 @@ function render() {
   progress.style.strokeDashoffset = CIRC * (1 - remaining / duration(mode));
   $("toggle").textContent = ticker ? "Pause" : (remaining < duration(mode) ? "Weiter" : "Start");
   $("label").textContent = ticker ? LABELS[mode] : (remaining < duration(mode) ? "Pausiert" : LABELS[mode]);
-  document.title = ticker ? `${fmt(remaining)} · ${LABELS[mode]}` : "Fokus-Timer";
+  document.title = ticker ? `${fmt(remaining)} · ${LABELS[mode]}` : PAGE_TITLE;
   document.documentElement.dataset.mode = mode;
   document.documentElement.dataset.color = cfg().color;
   document.querySelectorAll(".modes button").forEach(b =>
@@ -1289,7 +1290,7 @@ $("exportBtn").onclick = () => {
   const blob = new Blob([JSON.stringify({ app: "fokus-timer", version: 1, data }, null, 1)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `fokus-timer-sicherung-${dayKey(new Date())}.json`;
+  a.download = `fokusly-sicherung-${dayKey(new Date())}.json`;
   a.click();
   URL.revokeObjectURL(a.href);
   $("dataMsg").className = "msg ok"; $("dataMsg").textContent = "Sicherung wurde heruntergeladen.";
@@ -1308,7 +1309,7 @@ $("importFile").onchange = async e => {
     });
     location.reload();
   } catch {
-    $("dataMsg").className = "msg err"; $("dataMsg").textContent = "Das ist keine gültige Fokus-Timer-Sicherung.";
+    $("dataMsg").className = "msg err"; $("dataMsg").textContent = "Das ist keine gültige Fokusly-Sicherung.";
   }
 };
 
@@ -1322,7 +1323,7 @@ $("keyForm").onsubmit = async e => {
     const res = await fetch("https://api.lemonsqueezy.com/v1/licenses/activate", {
       method: "POST",
       headers: { "Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ license_key: key, instance_name: "Fokus-Timer Browser" })
+      body: new URLSearchParams({ license_key: key, instance_name: "Fokusly Browser" })
     });
     const data = await res.json();
     if (data.activated !== true || (STORE_ID && data.meta?.store_id !== STORE_ID)) throw new Error(data.error || "Ungültiger Schlüssel");
